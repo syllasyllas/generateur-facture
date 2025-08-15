@@ -197,7 +197,7 @@
             border-top: 2px solid #333;
         }
         .pied-recu {
-            margin-top: 30px;
+            margin-top: 50px;
             padding-top: 20px;
             border-top: 1px solid #ccc;
             font-size: 12px;
@@ -213,17 +213,23 @@
             margin-bottom: 20px;
         }
         .signatures {
-            margin-top: 50px;
+            margin-top: 100px;
             display: flex;
             justify-content: space-between;
+            align-items: flex-end;
         }
         .zone-signature {
             border-top: 1px solid #333;
-            width: 40%;
+            width: 45%;
             text-align: center;
             padding-top: 8px;
             font-size: 13px;
-            height: 80px; 
+            height: 150px;
+        }
+        .signature-image {
+            display: block;
+            max-height: 200px;
+            margin: -160px auto -15px auto;
         }
 
         @media print {
@@ -261,7 +267,7 @@
             </div>
             <div class="champ"><label for="montant">Montant (FCFA)</label><input type="number" id="montant" placeholder="Ex: 25000"></div>
             <div class="champ"><label for="valeurColis">Valeur du Colis</label><input type="number" id="valeurColis" placeholder="Ex: 100000"></div>
-            <div class="champ"><label for="prixDeclare">Prix Déclaré</label><input type="number" id="prixDeclare" placeholder="Ex: 100000"></div>
+            <div class="champ"><label for="prixDeclare">Prix Déclaré Pris en Compte</label><input type="number" id="prixDeclare" placeholder="Ex: 100000"></div>
             <div class="champ">
                 <div class="checkbox-container"><input type="checkbox" id="hasReduction" onchange="toggleReductionInput()"><label for="hasReduction">Appliquer une réduction</label></div>
                 <input type="number" id="reduction" placeholder="Saisir le montant de la réduction" disabled>
@@ -339,7 +345,7 @@
                         <table>
                             <tbody>
                                 <tr><td>Valeur du Colis :</td><td style="text-align:right;"><span id="facture-valeurColis">0</span> FCFA</td></tr>
-                                <tr><td>Prix Déclaré :</td><td style="text-align:right;"><span id="facture-prixDeclare">0</span> FCFA</td></tr>
+                                <tr><td>Prix Déclaré Pris en Compte :</td><td style="text-align:right;"><span id="facture-prixDeclare">0</span> FCFA</td></tr>
                                 <tr id="ligne-reduction" style="display:none;"><td>Réduction :</td><td style="text-align:right;">- <span id="facture-reduction">0</span> FCFA</td></tr>
                                 <tr class="grand-total"><td>GRAND TOTAL :</td><td style="text-align:right;"><span id="facture-grandTotal">0</span> FCFA</td></tr>
                             </tbody>
@@ -353,6 +359,7 @@
                 <div class="signatures">
                     <div class="zone-signature">Signature de l'Expéditeur</div>
                     <div class="zone-signature">
+                        <img src="https://i.postimg.cc/15WW3FHb/Untitled-design.png" alt="Signature de l'agence" class="signature-image">
                         Signature de l'Agence
                     </div>
                 </div>
