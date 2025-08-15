@@ -167,6 +167,28 @@
             border: 1px solid #e0e0e0;
             padding: 25px;
             border-radius: 8px;
+            position: relative; /* Nécessaire pour le filigrane */
+            overflow: hidden; /* Empêche le filigrane de déborder */
+        }
+        #recu::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 80%;
+            height: 80%;
+            transform: translate(-50%, -50%);
+            background-image: url('https://i.postimg.cc/ncnzhbWX/Design-sans-titre-3.png');
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.08;
+            pointer-events: none;
+            z-index: 1;
+        }
+        .invoice-content {
+            position: relative;
+            z-index: 2; /* S'assure que le contenu est au-dessus du filigrane */
         }
         .header-recu {
             display: flex;
@@ -202,7 +224,7 @@
         .details-expedition, .details-contenu {
             margin-top: 20px;
             padding: 15px;
-            background-color: #f9fafb;
+            background-color: rgba(249, 250, 251, 0.8); /* Fond légèrement transparent */
             border: 1px solid #e5e7eb;
             border-radius: 8px;
         }
@@ -229,7 +251,7 @@
             font-size: 14px;
         }
         .table-contenu th, #dbTable th {
-            background-color: #f1f5f9;
+            background-color: rgba(241, 245, 249, 0.8);
             font-weight: 600;
         }
         .table-contenu td:nth-child(2), .table-contenu td:nth-child(3) {
@@ -263,7 +285,7 @@
         .note-importante {
             font-weight: bold;
             color: #D32F2F;
-            background-color: #FFEBEE;
+            background-color: rgba(255, 235, 238, 0.8);
             padding: 10px;
             border-radius: 5px;
             text-align: center;
@@ -287,33 +309,6 @@
             display: block;
             max-height: 200px;
             margin: -160px auto -15px auto;
-        }
-
-        /* Styles pour l'impression */
-        @media print {
-            @page {
-                size: A4;
-                margin: 0;
-            }
-            body { 
-                background-color: white; 
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
-            #main-content { display: block !important; }
-            .formulaire, .boutons-actions, h2, .base-de-donnees, #login-overlay, #delete-overlay { display: none !important; }
-            .apercu-recu { 
-                box-shadow: none; 
-                width: 100%; 
-                padding: 0; 
-                margin: 0;
-                border: none;
-            }
-            #recu { 
-                border: none;
-                break-inside: avoid;
-            }
-            .note-importante { background-color: #f0f0f0 !important; }
         }
 
         /* Styles pour Mobile */
@@ -344,6 +339,56 @@
                 font-size: 12px;
                 padding: 8px;
             }
+        }
+
+        /* Styles pour l'impression */
+        @media print {
+            @page {
+                size: A4;
+                margin: 5mm; /* Marge réduite */
+            }
+            html, body {
+                width: 210mm;
+                height: 297mm;
+                overflow: hidden; /* Pas de scroll */
+                font-size: 9.5pt; /* Police lisible */
+            }
+            body { 
+                background-color: white !important; 
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            #main-content { display: block !important; }
+            .formulaire, .boutons-actions, h2, .base-de-donnees, #login-overlay, #delete-overlay { display: none !important; }
+            .apercu-recu { 
+                box-shadow: none !important; 
+                width: 100% !important; 
+                padding: 0 !important; 
+                margin: 0 !important;
+                border: none !important;
+            }
+            #recu { 
+                border: none !important;
+                padding: 0 !important;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-between;
+                min-height: calc(297mm - 10mm);
+                page-break-inside: avoid !important;
+            }
+            #recu::before {
+                opacity: 0.06 !important; /* Filigrane plus discret à l'impression */
+            }
+            .logo { max-width: 150px !important; }
+            .titre-facture { font-size: 1.5em !important; margin-bottom: 8px !important; }
+            .details-expedition, .details-contenu { padding: 8px !important; margin-top: 8px !important; }
+            .table-contenu th, .table-contenu td { padding: 5px !important; }
+            .resume-financier { padding-left: 0 !important; margin-top: 10px !important; }
+            .pied-recu { margin-top: 25px !important; padding-top: 10px !important; }
+            .signatures { margin-top: 60px !important; page-break-inside: avoid !important; }
+            .zone-signature { height: 80px !important; }
+            .signature-image { max-height: 100px !important; margin: -80px auto -15px auto !important; }
+            .note-importante { background-color: #f0f0f0 !important; padding: 8px !important; }
         }
     </style>
 </head>
@@ -414,80 +459,84 @@
         <div class="conteneur apercu-recu">
             <h2>Aperçu de la Facture</h2>
             <div id="recu">
-                <div class="header-recu">
-                    <div><img src="https://i.postimg.cc/ncnzhbWX/Design-sans-titre-3.png" alt="Logo MONCOLIS.CI" class="logo"></div>
-                    <div class="infos-entreprise">
-                        <strong>MONCOLIS.CI</strong><br>
-                        <span style="font-size: 12px; color: #777;">Une représentation de EKF-CORPORATION</span><br><br>
-                        Cocody Riviera Palmeraie, Rue Ministre, Abidjan<br>
-                        Téléphone : +225 07 49 75 55 19<br>
-                        N° Registre : RVN: CI-ABJ-03-2021-B12-01877
-                    </div>
-                </div>
-
-                <div class="corps-recu">
-                    <div class="titre-facture">FACTURE</div>
-                    <div class="infos-transaction">
-                        <div><strong>Date :</strong> <span id="facture-date">-</span><br><strong>N° Facture :</strong> <span id="facture-num">-</span></div>
-                    </div>
-
-                    <div class="details-expedition">
-                        <div class="parties-container">
-                            <div class="partie">
-                                <strong>Destinataire :</strong><br>
-                                Nom : <span id="facture-clientNom">-</span><br>
-                                Contact : <span id="facture-clientContact">-</span><br>
-                                Ville : <span id="facture-clientVille">-</span>
-                            </div>
-                            <div class="partie">
-                                <strong>Expéditeur :</strong><br>
-                                Nom : <span id="facture-expediteur">-</span><br>
-                                Contact : <span id="facture-expediteurContact">-</span><br>
-                                N° Pièce d'Identité : <span id="facture-expediteurPiece">-</span>
+                <div class="invoice-content">
+                    <div> <!-- Conteneur pour le haut de la facture -->
+                        <div class="header-recu">
+                            <div><img src="https://i.postimg.cc/ncnzhbWX/Design-sans-titre-3.png" alt="Logo MONCOLIS.CI" class="logo"></div>
+                            <div class="infos-entreprise">
+                                <strong>MONCOLIS.CI</strong><br>
+                                <span style="font-size: 12px; color: #777;">Une représentation de EKF-CORPORATION</span><br><br>
+                                Cocody Riviera Palmeraie, Rue Ministre, Abidjan<br>
+                                Téléphone : +225 07 49 75 55 19<br>
+                                N° Registre : RVN: CI-ABJ-03-2021-B12-01877
                             </div>
                         </div>
-                        <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 15px 0;">
-                        <div><strong>Numéro de Tracking :</strong> <span id="facture-tracking">-</span></div>
-                    </div>
 
-                    <div class="details-contenu">
-                        <strong>Détails du Contenu du Colis :</strong>
-                        <table class="table-contenu">
-                            <thead>
-                                <tr>
-                                    <th>Description</th>
-                                    <th id="header-unit">Poids/KG</th>
-                                    <th>Montant</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td id="facture-description">-</td>
-                                    <td id="facture-unitValue">-</td>
-                                    <td id="facture-montant">-</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                        <div class="resume-financier">
-                            <table>
-                                <tbody>
-                                    <tr><td>Valeur du Colis :</td><td style="text-align:right;"><span id="facture-valeurColis">0</span> FCFA</td></tr>
-                                    <tr><td>Prix Déclaré Pris en Compte :</td><td style="text-align:right;"><span id="facture-prixDeclare">0</span> FCFA</td></tr>
-                                    <tr id="ligne-reduction" style="display:none;"><td>Réduction :</td><td style="text-align:right;">- <span id="facture-reduction">0</span> FCFA</td></tr>
-                                    <tr class="grand-total"><td>GRAND TOTAL :</td><td style="text-align:right;"><span id="facture-grandTotal">0</span> FCFA</td></tr>
-                                </tbody>
-                            </table>
+                        <div class="corps-recu">
+                            <div class="titre-facture">FACTURE</div>
+                            <div class="infos-transaction">
+                                <div><strong>Date :</strong> <span id="facture-date">-</span><br><strong>N° Facture :</strong> <span id="facture-num">-</span></div>
+                            </div>
+
+                            <div class="details-expedition">
+                                <div class="parties-container">
+                                    <div class="partie">
+                                        <strong>Destinataire :</strong><br>
+                                        Nom : <span id="facture-clientNom">-</span><br>
+                                        Contact : <span id="facture-clientContact">-</span><br>
+                                        Ville : <span id="facture-clientVille">-</span>
+                                    </div>
+                                    <div class="partie">
+                                        <strong>Expéditeur :</strong><br>
+                                        Nom : <span id="facture-expediteur">-</span><br>
+                                        Contact : <span id="facture-expediteurContact">-</span><br>
+                                        N° Pièce d'Identité : <span id="facture-expediteurPiece">-</span>
+                                    </div>
+                                </div>
+                                <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 15px 0;">
+                                <div><strong>Numéro de Tracking :</strong> <span id="facture-tracking">-</span></div>
+                            </div>
+
+                            <div class="details-contenu">
+                                <strong>Détails du Contenu du Colis :</strong>
+                                <table class="table-contenu">
+                                    <thead>
+                                        <tr>
+                                            <th>Description</th>
+                                            <th id="header-unit">Poids/KG</th>
+                                            <th>Montant</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td id="facture-description">-</td>
+                                            <td id="facture-unitValue">-</td>
+                                            <td id="facture-montant">-</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div class="resume-financier">
+                                    <table>
+                                        <tbody>
+                                            <tr><td>Valeur du Colis :</td><td style="text-align:right;"><span id="facture-valeurColis">0</span> FCFA</td></tr>
+                                            <tr><td>Prix Déclaré Pris en Compte :</td><td style="text-align:right;"><span id="facture-prixDeclare">0</span> FCFA</td></tr>
+                                            <tr id="ligne-reduction" style="display:none;"><td>Réduction :</td><td style="text-align:right;">- <span id="facture-reduction">0</span> FCFA</td></tr>
+                                            <tr class="grand-total"><td>GRAND TOTAL :</td><td style="text-align:right;"><span id="facture-grandTotal">0</span> FCFA</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <div class="pied-recu">
-                    <p class="note-importante">Important : Les charges de la douane sont à la responsabilité exclusive du client.</p>
-                    <div class="signatures">
-                        <div class="zone-signature">Signature de l'Expéditeur</div>
-                        <div class="zone-signature">
-                            <img src="https://i.postimg.cc/15WW3FHb/Untitled-design.png" alt="Signature de l'agence" class="signature-image">
-                            Signature de l'Agence
+                    <div class="pied-recu">
+                        <p class="note-importante">Important : Les charges de la douane sont à la responsabilité exclusive du client.</p>
+                        <div class="signatures">
+                            <div class="zone-signature">Signature de l'Expéditeur</div>
+                            <div class="zone-signature">
+                                <img src="https://i.postimg.cc/15WW3FHb/Untitled-design.png" alt="Signature de l'agence" class="signature-image">
+                                Signature de l'Agence
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -531,7 +580,7 @@
 
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(logout, 3600 * 1000); // 1 heure (3600 * 1000 ms)
+            inactivityTimer = setTimeout(logout, 3600 * 1000); // 1 heure
         }
 
         function setupInactivityListeners() {
