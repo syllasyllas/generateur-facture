@@ -17,7 +17,7 @@
             gap: 30px;
             justify-content: center;
         }
-        #login-overlay {
+        .overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -29,18 +29,18 @@
             align-items: center;
             z-index: 1000;
         }
-        #login-box {
+        .modal-box {
             background: white;
             padding: 40px;
             border-radius: 12px;
             text-align: center;
             box-shadow: 0 5px 20px rgba(0,0,0,0.3);
         }
-        #login-box h2 {
+        .modal-box h2 {
             margin-top: 0;
             color: #333;
         }
-        #pin-input {
+        .pin-input {
             padding: 12px;
             font-size: 20px;
             text-align: center;
@@ -49,7 +49,7 @@
             border-radius: 6px;
             margin-bottom: 15px;
         }
-        #error-message {
+        .error-message {
             color: red;
             display: none;
             margin-top: 10px;
@@ -226,6 +226,7 @@
             border: 1px solid #e5e7eb;
             padding: 12px;
             text-align: left;
+            font-size: 14px;
         }
         .table-contenu th, #dbTable th {
             background-color: #f1f5f9;
@@ -288,13 +289,31 @@
             margin: -160px auto -15px auto;
         }
 
+        /* Styles pour l'impression */
         @media print {
-            body { background-color: white; display: block; padding: 0; margin: 0; }
-            .formulaire, .boutons-actions, h2, .base-de-donnees, #login-overlay { display: none; }
-            .apercu-recu { box-shadow: none; width: 100%; padding: 0; margin: 0; }
-            #recu { border: none; }
+            @page {
+                size: A4;
+                margin: 0;
+            }
+            body { 
+                background-color: white; 
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
             #main-content { display: block !important; }
-            .note-importante { background-color: #f0f0f0; }
+            .formulaire, .boutons-actions, h2, .base-de-donnees, #login-overlay, #delete-overlay { display: none !important; }
+            .apercu-recu { 
+                box-shadow: none; 
+                width: 100%; 
+                padding: 0; 
+                margin: 0;
+                border: none;
+            }
+            #recu { 
+                border: none;
+                break-inside: avoid;
+            }
+            .note-importante { background-color: #f0f0f0 !important; }
         }
 
         /* Styles pour Mobile */
@@ -305,10 +324,10 @@
             #main-content {
                 flex-direction: column;
             }
-            .conteneur {
+            .conteneur, .formulaire, .apercu-recu, .base-de-donnees {
                 padding: 15px;
             }
-            .champ-groupe, .parties-container, .signatures {
+            .champ-groupe, .parties-container, .signatures, .bouton-groupe {
                 flex-direction: column;
                 gap: 15px;
             }
@@ -321,18 +340,35 @@
             .signatures {
                 gap: 50px;
             }
+            #dbTable th, #dbTable td {
+                font-size: 12px;
+                padding: 8px;
+            }
         }
     </style>
 </head>
 <body onload="chargerBaseDeDonnees()">
 
-    <div id="login-overlay">
-        <div id="login-box">
+    <div id="login-overlay" class="overlay">
+        <div class="modal-box">
             <h2>Accès Sécurisé</h2>
             <p>Veuillez entrer le code PIN pour continuer.</p>
-            <input type="password" id="pin-input" maxlength="4" autofocus>
+            <input type="password" id="pin-input" class="pin-input" maxlength="4" autofocus>
             <button type="button" onclick="checkPin()" class="bouton-principal">Entrer</button>
-            <p id="error-message">Code PIN incorrect.</p>
+            <p id="error-message-login" class="error-message">Code PIN incorrect.</p>
+        </div>
+    </div>
+
+    <div id="delete-overlay" class="overlay" style="display: none;">
+        <div class="modal-box">
+            <h2>Confirmation Requise</h2>
+            <p>Entrez le code PIN pour vider la base de données.</p>
+            <input type="password" id="delete-pin-input" class="pin-input" maxlength="4">
+            <div class="bouton-groupe">
+                <button type="button" onclick="confirmerSuppression()" class="bouton-danger">Confirmer</button>
+                <button type="button" onclick="document.getElementById('delete-overlay').style.display = 'none'" class="bouton-secondaire">Annuler</button>
+            </div>
+            <p id="error-message-delete" class="error-message">Code PIN incorrect.</p>
         </div>
     </div>
 
@@ -341,19 +377,16 @@
             <form id="invoiceForm">
                 <h1>📝 Générateur de Facture</h1>
                 
-                <!-- Infos Destinataire -->
                 <div class="champ"><label for="clientNom">Nom & Prénom du Destinataire</label><input type="text" id="clientNom" placeholder="Ex: Jean Dupont"></div>
                 <div class="champ"><label for="clientContact">Contact du Destinataire</label><input type="text" id="clientContact" placeholder="Ex: 0102030405"></div>
                 <div class="champ"><label for="clientVille">Ville de Résidence du Destinataire</label><input type="text" id="clientVille" placeholder="Ex: Abidjan"></div>
                 <hr style="border: 1px solid #f0f0f0; margin: 25px 0;">
                 
-                <!-- Infos Expéditeur -->
                 <div class="champ"><label for="expediteur">Nom de l'Expéditeur</label><input type="text" id="expediteur" placeholder="Nom de la personne qui dépose le colis"></div>
                 <div class="champ"><label for="expediteurContact">Contact de l'Expéditeur</label><input type="text" id="expediteurContact" placeholder="Ex: 0708091011"></div>
                 <div class="champ"><label for="expediteurPiece">N° Pièce d'Identité (Expéditeur)</label><input type="text" id="expediteurPiece" placeholder="Ex: C00123456789"></div>
                 <hr style="border: 1px solid #f0f0f0; margin: 25px 0;">
 
-                <!-- Infos Colis -->
                 <div class="champ"><label for="description">Description</label><textarea id="description" rows="2" placeholder="Ex: Vêtements, documents..."></textarea></div>
                 <div class="champ-groupe">
                     <div class="champ"><label for="unitType">Unité</label><select id="unitType"><option value="Poids/KG">Poids/KG</option><option value="CBM">CBM</option></select></div>
@@ -475,14 +508,13 @@
                         <th>N° Facture</th>
                         <th>Date</th>
                         <th>Destinataire</th>
+                        <th>Téléphone</th>
                         <th>Grand Total</th>
                     </tr>
                 </thead>
-                <tbody id="dbBody">
-                    <!-- Les factures sauvegardées apparaîtront ici -->
-                </tbody>
+                <tbody id="dbBody"></tbody>
             </table>
-            <button onclick="viderBaseDeDonnees()" class="bouton-danger" style="margin-top: 20px; width: 100%;">Vider la Base de Données</button>
+            <button onclick="demanderPinPourSuppression()" class="bouton-danger" style="margin-top: 20px; width: 100%;">Vider la Base de Données</button>
         </div>
     </div>
 
@@ -499,7 +531,7 @@
 
         function resetInactivityTimer() {
             clearTimeout(inactivityTimer);
-            inactivityTimer = setTimeout(logout, 3600 * 1000); // 1 heure
+            inactivityTimer = setTimeout(logout, 3600 * 1000); // 1 heure (3600 * 1000 ms)
         }
 
         function setupInactivityListeners() {
@@ -512,7 +544,7 @@
         function checkPin() {
             const correctPin = "5008";
             const enteredPin = document.getElementById('pin-input').value;
-            const errorMessage = document.getElementById('error-message');
+            const errorMessage = document.getElementById('error-message-login');
 
             if (enteredPin === correctPin) {
                 document.getElementById('login-overlay').style.display = 'none';
@@ -587,21 +619,32 @@
             const dbBody = document.getElementById('dbBody');
             const newRow = dbBody.insertRow(0);
 
-            const cellNum = newRow.insertCell(0);
-            const cellDate = newRow.insertCell(1);
-            const cellNom = newRow.insertCell(2);
-            const cellTotal = newRow.insertCell(3);
-
-            cellNum.innerText = facture.numero;
-            cellDate.innerText = facture.date;
-            cellNom.innerText = facture.destinataire;
-            cellTotal.innerText = facture.total + " FCFA";
+            newRow.insertCell(0).innerText = facture.numero;
+            newRow.insertCell(1).innerText = facture.date;
+            newRow.insertCell(2).innerText = facture.destinataire;
+            newRow.insertCell(3).innerText = facture.telephone;
+            newRow.insertCell(4).innerText = facture.total + " FCFA";
+        }
+        
+        function demanderPinPourSuppression() {
+            document.getElementById('delete-overlay').style.display = 'flex';
+            document.getElementById('delete-pin-input').focus();
+            document.getElementById('error-message-delete').style.display = 'none';
         }
 
-        function viderBaseDeDonnees() {
-            if (window.confirm("Êtes-vous sûr de vouloir supprimer toutes les factures sauvegardées ? Cette action est irréversible.")) {
+        function confirmerSuppression() {
+            const correctPin = "5008";
+            const enteredPin = document.getElementById('delete-pin-input').value;
+            const errorMessage = document.getElementById('error-message-delete');
+
+            if (enteredPin === correctPin) {
                 localStorage.removeItem('facturesDB');
                 chargerBaseDeDonnees();
+                document.getElementById('delete-overlay').style.display = 'none';
+                document.getElementById('delete-pin-input').value = '';
+            } else {
+                errorMessage.style.display = 'block';
+                document.getElementById('delete-pin-input').value = '';
             }
         }
 
@@ -675,6 +718,7 @@
                 numero: numeroFactureActuel,
                 date: dateStr,
                 destinataire: clientNom || "-",
+                telephone: clientContact || "-",
                 total: grandTotal.toLocaleString('fr-FR')
             };
 
