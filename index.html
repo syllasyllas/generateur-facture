@@ -5,14 +5,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Générateur de Facture</title>
     <style>
+        :root {
+            --primary-color: #ff8c00; /* Orange MONCOLIS */
+            --secondary-color: #333;
+            --light-gray: #f4f7f6;
+            --text-color: #333;
+        }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-family: 'Poppins', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 20px;
-            background-color: #f4f7f6;
+            background-color: var(--light-gray);
+            font-size: 16px;
         }
         #main-content {
-            display: none; /* Contenu principal caché par défaut */
+            display: none;
             flex-wrap: wrap;
             gap: 30px;
             justify-content: center;
@@ -35,10 +42,12 @@
             border-radius: 12px;
             text-align: center;
             box-shadow: 0 5px 20px rgba(0,0,0,0.3);
+            width: 90%;
+            max-width: 400px;
         }
         .modal-box h2 {
             margin-top: 0;
-            color: #333;
+            color: var(--secondary-color);
         }
         .pin-input {
             padding: 12px;
@@ -58,7 +67,7 @@
             width: 100%;
             max-width: 800px;
         }
-        .formulaire, .apercu-recu, .base-de-donnees {
+        .formulaire, .apercu-recu, .base-de-donnees, .gestion-contacts {
             background: white;
             padding: 30px;
             border-radius: 12px;
@@ -66,8 +75,8 @@
             margin-bottom: 20px;
         }
         h1, h2 {
-            color: #1a2533;
-            border-bottom: 2px solid #007bff;
+            color: var(--secondary-color);
+            border-bottom: 2px solid var(--primary-color);
             padding-bottom: 10px;
             margin-top: 0;
         }
@@ -85,7 +94,7 @@
             display: block;
             margin-bottom: 6px;
             font-weight: 600;
-            color: #333;
+            color: var(--text-color);
         }
         input[type="text"], input[type="number"], textarea, select {
             width: calc(100% - 22px);
@@ -93,12 +102,14 @@
             border: 1px solid #ccc;
             border-radius: 6px;
             transition: border-color 0.3s, background-color 0.3s;
+            font-size: 1em;
+            font-family: 'Poppins', sans-serif;
         }
         select {
              width: 100%;
         }
         input:focus, textarea:focus, select:focus {
-            border-color: #007bff;
+            border-color: var(--primary-color);
             outline: none;
         }
         input:disabled {
@@ -129,18 +140,21 @@
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
-            transition: background-color 0.3s, opacity 0.3s;
+            transition: transform 0.2s, background-color 0.3s, opacity 0.3s;
+        }
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
         }
         button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
         .bouton-principal {
-            background-color: #007bff;
+            background-color: var(--primary-color);
             color: white;
         }
         .bouton-principal:hover:not(:disabled) {
-            background-color: #0056b3;
+            background-color: #e67e00;
         }
         .bouton-secondaire {
             background-color: #6c757d;
@@ -167,8 +181,8 @@
             border: 1px solid #e0e0e0;
             padding: 25px;
             border-radius: 8px;
-            position: relative; /* Nécessaire pour le filigrane */
-            overflow: hidden; /* Empêche le filigrane de déborder */
+            position: relative;
+            overflow: hidden;
         }
         #recu::before {
             content: '';
@@ -188,7 +202,7 @@
         }
         .invoice-content {
             position: relative;
-            z-index: 2; /* S'assure que le contenu est au-dessus du filigrane */
+            z-index: 2;
         }
         .header-recu {
             display: flex;
@@ -199,11 +213,11 @@
             margin-bottom: 20px;
         }
         .logo {
-            max-width: 220px;
+            max-width: 350px;
         }
         .infos-entreprise {
             text-align: right;
-            font-size: 14px;
+            font-size: 1em;
             color: #555;
         }
         .corps-recu {
@@ -211,7 +225,7 @@
         }
         .titre-facture {
             text-align: center;
-            font-size: 2em;
+            font-size: 2.2em;
             font-weight: bold;
             color: #333;
             margin-bottom: 20px;
@@ -224,7 +238,7 @@
         .details-expedition, .details-contenu {
             margin-top: 20px;
             padding: 15px;
-            background-color: rgba(249, 250, 251, 0.8); /* Fond légèrement transparent */
+            background-color: rgba(249, 250, 251, 0.8);
             border: 1px solid #e5e7eb;
             border-radius: 8px;
         }
@@ -237,7 +251,7 @@
             width: 48%;
         }
         .partie strong, .details-expedition strong, .details-contenu strong {
-            color: #007bff;
+            color: var(--primary-color);
         }
         .table-contenu, #dbTable {
             width: 100%;
@@ -245,10 +259,15 @@
             border-collapse: collapse;
         }
         .table-contenu th, .table-contenu td, #dbTable th, #dbTable td {
-            border: 1px solid #e5e7eb;
+            border: 1.5px solid #333;
             padding: 12px;
             text-align: left;
-            font-size: 14px;
+            font-size: 1em;
+        }
+        #dbTable .invoice-link {
+            cursor: pointer;
+            color: var(--primary-color);
+            text-decoration: underline;
         }
         .table-contenu th, #dbTable th {
             background-color: rgba(241, 245, 249, 0.8);
@@ -272,14 +291,14 @@
         .resume-financier .grand-total td {
             font-weight: bold;
             font-size: 1.2em;
-            color: #D32F2F; /* Grand total en rouge */
+            color: #D32F2F;
             border-top: 2px solid #333;
         }
         .pied-recu {
             margin-top: 50px;
             padding-top: 20px;
             border-top: 1px solid #ccc;
-            font-size: 12px;
+            font-size: 0.9em;
             color: #666;
         }
         .note-importante {
@@ -302,98 +321,56 @@
             width: 45%;
             text-align: center;
             padding-top: 8px;
-            font-size: 13px;
+            font-size: 1em;
             height: 150px;
         }
-        .signature-image {
-            display: block;
-            max-height: 200px;
-            margin: -160px auto -15px auto;
+        .remerciements {
+            text-align: left;
+            margin-top: 40px;
+            font-style: italic;
         }
+        .status-select {
+            padding: 5px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+        .status-payee { background-color: #d4edda; color: #155724; }
+        .status-en-attente { background-color: #fff3cd; color: #856404; }
+        .status-annulee { background-color: #f8d7da; color: #721c24; }
 
-        /* Styles pour Mobile */
         @media (max-width: 768px) {
-            body {
-                padding: 10px;
-            }
-            #main-content {
-                flex-direction: column;
-            }
-            .conteneur, .formulaire, .apercu-recu, .base-de-donnees {
-                padding: 15px;
-            }
-            .champ-groupe, .parties-container, .signatures, .bouton-groupe {
-                flex-direction: column;
-                gap: 15px;
-            }
-            .partie, .zone-signature {
-                width: 100%;
-            }
-            .resume-financier {
-                padding-left: 0;
-            }
-            .signatures {
-                gap: 50px;
-            }
-            #dbTable th, #dbTable td {
-                font-size: 12px;
-                padding: 8px;
-            }
+            body { padding: 10px; }
+            #main-content { flex-direction: column; }
+            .conteneur, .formulaire, .apercu-recu, .base-de-donnees { padding: 15px; }
+            .champ-groupe, .parties-container, .signatures, .bouton-groupe { flex-direction: column; gap: 15px; }
+            .partie, .zone-signature { width: 100%; }
+            .resume-financier { padding-left: 0; }
+            .signatures { gap: 50px; }
+            #dbTable th, #dbTable td { font-size: 12px; padding: 8px; }
         }
 
-        /* Styles pour l'impression */
         @media print {
-            @page {
-                size: A4;
-                margin: 5mm; /* Marge réduite */
-            }
-            html, body {
-                width: 210mm;
-                height: 297mm;
-                overflow: hidden; /* Pas de scroll */
-                font-size: 9.5pt; /* Police lisible */
-            }
-            body { 
-                background-color: white !important; 
-                -webkit-print-color-adjust: exact;
-                print-color-adjust: exact;
-            }
+            @page { size: A4; margin: 5mm; }
+            html, body { width: 210mm; height: 297mm; overflow: hidden; font-size: 10pt; }
+            body { background-color: white !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
             #main-content { display: block !important; }
-            .formulaire, .boutons-actions, h2, .base-de-donnees, #login-overlay, #delete-overlay { display: none !important; }
-            .apercu-recu { 
-                box-shadow: none !important; 
-                width: 100% !important; 
-                padding: 0 !important; 
-                margin: 0 !important;
-                border: none !important;
-            }
-            #recu { 
-                border: none !important;
-                padding: 0 !important;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-                min-height: calc(297mm - 10mm);
-                page-break-inside: avoid !important;
-            }
-            #recu::before {
-                opacity: 0.06 !important; /* Filigrane plus discret à l'impression */
-            }
-            .logo { max-width: 150px !important; }
-            .titre-facture { font-size: 1.5em !important; margin-bottom: 8px !important; }
-            .details-expedition, .details-contenu { padding: 8px !important; margin-top: 8px !important; }
-            .table-contenu th, .table-contenu td { padding: 5px !important; }
+            .formulaire, .boutons-actions, h2, .base-de-donnees, #login-overlay, #delete-overlay, .gestion-contacts { display: none !important; }
+            .apercu-recu { box-shadow: none !important; width: 100% !important; padding: 0 !important; margin: 0 !important; border: none !important; }
+            #recu { border: none !important; padding: 0 !important; display: flex; flex-direction: column; justify-content: space-between; min-height: calc(297mm - 10mm); page-break-inside: avoid !important; }
+            #recu::before { opacity: 0.06 !important; }
+            .logo { max-width: 250px !important; }
+            .titre-facture { font-size: 1.8em !important; margin-bottom: 10px !important; }
+            .details-expedition, .details-contenu { padding: 8px !important; margin-top: 10px !important; }
+            .table-contenu th, .table-contenu td { padding: 6px !important; border: 1px solid #000 !important; }
             .resume-financier { padding-left: 0 !important; margin-top: 10px !important; }
             .pied-recu { margin-top: 25px !important; padding-top: 10px !important; }
             .signatures { margin-top: 60px !important; page-break-inside: avoid !important; }
             .zone-signature { height: 80px !important; }
-            .signature-image { max-height: 100px !important; margin: -80px auto -15px auto !important; }
             .note-importante { background-color: #f0f0f0 !important; padding: 8px !important; }
         }
     </style>
 </head>
-<body onload="chargerBaseDeDonnees()">
-
+<body>
     <div id="login-overlay" class="overlay">
         <div class="modal-box">
             <h2>Accès Sécurisé</h2>
@@ -424,7 +401,9 @@
                 
                 <div class="champ"><label for="clientNom">Nom & Prénom du Destinataire</label><input type="text" id="clientNom" placeholder="Ex: Jean Dupont"></div>
                 <div class="champ"><label for="clientContact">Contact du Destinataire</label><input type="text" id="clientContact" placeholder="Ex: 0102030405"></div>
-                <div class="champ"><label for="clientVille">Ville de Résidence du Destinataire</label><input type="text" id="clientVille" placeholder="Ex: Abidjan"></div>
+                <div class="champ"><label for="clientAdresse">Adresse</label><input type="text" id="clientAdresse" placeholder="Ex: 123 Rue de l'Exemple"></div>
+                <div class="champ"><label for="clientCodePostal">Code Postal</label><input type="text" id="clientCodePostal" placeholder="Ex: 75001"></div>
+                <div class="champ"><label for="clientPays">Pays</label><select id="clientPays"></select></div>
                 <hr style="border: 1px solid #f0f0f0; margin: 25px 0;">
                 
                 <div class="champ"><label for="expediteur">Nom de l'Expéditeur</label><input type="text" id="expediteur" placeholder="Nom de la personne qui dépose le colis"></div>
@@ -465,7 +444,7 @@
                             <div><img src="https://i.postimg.cc/ncnzhbWX/Design-sans-titre-3.png" alt="Logo MONCOLIS.CI" class="logo"></div>
                             <div class="infos-entreprise">
                                 <strong>MONCOLIS.CI</strong><br>
-                                <span style="font-size: 12px; color: #777;">Une représentation de EKF-CORPORATION</span><br><br>
+                                <span style="font-size: 12px; color: #777;">Une filiale de EKF-CORPORATION</span><br><br>
                                 Cocody Riviera Palmeraie, Rue Ministre, Abidjan<br>
                                 Téléphone : +225 07 49 75 55 19<br>
                                 N° Registre : RVN: CI-ABJ-03-2021-B12-01877
@@ -484,7 +463,8 @@
                                         <strong>Destinataire :</strong><br>
                                         Nom : <span id="facture-clientNom">-</span><br>
                                         Contact : <span id="facture-clientContact">-</span><br>
-                                        Ville : <span id="facture-clientVille">-</span>
+                                        Adresse : <span id="facture-clientAdresse">-</span><br>
+                                        <span id="facture-clientCodePostal"></span> <span id="facture-clientPays">-</span>
                                     </div>
                                     <div class="partie">
                                         <strong>Expéditeur :</strong><br>
@@ -494,7 +474,7 @@
                                     </div>
                                 </div>
                                 <hr style="border: 0; border-top: 1px solid #e5e7eb; margin: 15px 0;">
-                                <div><strong>Numéro de Tracking :</strong> <span id="facture-tracking">-</span></div>
+                                <div><strong>Numéro de Tracking :</strong> <span id="facture-tracking" style="color: red; font-weight: bold;">-</span></div>
                             </div>
 
                             <div class="details-contenu">
@@ -533,11 +513,9 @@
                         <p class="note-importante">Important : Les charges de la douane sont à la responsabilité exclusive du client.</p>
                         <div class="signatures">
                             <div class="zone-signature">Signature de l'Expéditeur</div>
-                            <div class="zone-signature">
-                                <img src="https://i.postimg.cc/15WW3FHb/Untitled-design.png" alt="Signature de l'agence" class="signature-image">
-                                Signature de l'Agence
-                            </div>
+                            <div class="zone-signature">Signature de l'Agence</div>
                         </div>
+                        <p class="remerciements">Nous vous remercions de votre confiance.</p>
                     </div>
                 </div>
             </div>
@@ -556,8 +534,10 @@
                     <tr>
                         <th>N° Facture</th>
                         <th>Date</th>
+                        <th>Heure</th>
                         <th>Destinataire</th>
-                        <th>Téléphone</th>
+                        <th>Téléphone Dest.</th>
+                        <th>Contact Expéd.</th>
                         <th>Grand Total</th>
                     </tr>
                 </thead>
@@ -567,7 +547,26 @@
         </div>
     </div>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
     <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCP-HMUYTKPc8qJx0IP0Zy1AEE6YNiAv6I",
+            authDomain: "facture-moncolis.firebaseapp.com",
+            projectId: "facture-moncolis",
+            storageBucket: "facture-moncolis.appspot.com", // Ligne corrigée
+            messagingSenderId: "423934430446",
+            appId: "1:423934430446:web:789b35c6a3a66ed70df7ff"
+        };
+
+        // Initialisation de Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const facturesCollection = db.collection("factures");
+        let facturesCache = [];
+
         let numeroFactureActuel = '';
         let inactivityTimer;
 
@@ -631,10 +630,12 @@
 
         function reinitialiserFacture() {
             document.getElementById('invoiceForm').reset();
+            populateCountries();
             
             const fieldsToReset = [
                 'facture-date', 'facture-num', 'facture-clientNom', 'facture-clientContact', 
-                'facture-clientVille', 'facture-expediteur', 'facture-expediteurContact', 
+                'facture-clientAdresse', 'facture-clientCodePostal', 'facture-clientPays',
+                'facture-expediteur', 'facture-expediteurContact', 
                 'facture-expediteurPiece', 'facture-tracking', 'facture-description', 'facture-unitValue'
             ];
             fieldsToReset.forEach(id => {
@@ -656,23 +657,30 @@
         }
 
         function chargerBaseDeDonnees() {
-            const factures = JSON.parse(localStorage.getItem('facturesDB')) || [];
-            const dbBody = document.getElementById('dbBody');
-            dbBody.innerHTML = '';
-            factures.forEach(facture => {
-                ajouterFactureAuTableau(facture);
+            facturesCollection.orderBy("timestamp", "desc").onSnapshot(snapshot => {
+                const dbBody = document.getElementById('dbBody');
+                dbBody.innerHTML = '';
+                facturesCache = [];
+                snapshot.forEach(doc => {
+                    const facture = doc.data();
+                    facture.id = doc.id;
+                    facturesCache.push(facture);
+                    ajouterFactureAuTableau(facture);
+                });
             });
         }
 
         function ajouterFactureAuTableau(facture) {
             const dbBody = document.getElementById('dbBody');
-            const newRow = dbBody.insertRow(0);
+            const newRow = dbBody.insertRow();
 
-            newRow.insertCell(0).innerText = facture.numero;
+            newRow.insertCell(0).innerHTML = `<a href="#" class="invoice-link" onclick="afficherApercu('${facture.id}')">${facture.numero}</a>`;
             newRow.insertCell(1).innerText = facture.date;
-            newRow.insertCell(2).innerText = facture.destinataire;
-            newRow.insertCell(3).innerText = facture.telephone;
-            newRow.insertCell(4).innerText = facture.total + " FCFA";
+            newRow.insertCell(2).innerText = facture.heure;
+            newRow.insertCell(3).innerText = facture.destinataire;
+            newRow.insertCell(4).innerText = facture.telephone;
+            newRow.insertCell(5).innerText = facture.expediteurContact;
+            newRow.insertCell(6).innerText = facture.total + " FCFA";
         }
         
         function demanderPinPourSuppression() {
@@ -687,10 +695,17 @@
             const errorMessage = document.getElementById('error-message-delete');
 
             if (enteredPin === correctPin) {
-                localStorage.removeItem('facturesDB');
-                chargerBaseDeDonnees();
-                document.getElementById('delete-overlay').style.display = 'none';
-                document.getElementById('delete-pin-input').value = '';
+                facturesCollection.get().then(querySnapshot => {
+                    const batch = db.batch();
+                    querySnapshot.forEach(doc => {
+                        batch.delete(doc.ref);
+                    });
+                    return batch.commit();
+                }).then(() => {
+                    console.log("Base de données vidée.");
+                    document.getElementById('delete-overlay').style.display = 'none';
+                    document.getElementById('delete-pin-input').value = '';
+                });
             } else {
                 errorMessage.style.display = 'block';
                 document.getElementById('delete-pin-input').value = '';
@@ -705,14 +720,56 @@
             window.location.href = mailtoLink;
         }
 
+        function afficherApercu(factureId) {
+            const facture = facturesCache.find(f => f.id === factureId);
+            if (!facture) return;
+
+            document.getElementById('facture-date').innerText = facture.date;
+            document.getElementById('facture-num').innerText = facture.numero;
+            document.getElementById('facture-clientNom').innerText = facture.destinataire;
+            document.getElementById('facture-clientContact').innerText = facture.telephone;
+            document.getElementById('facture-clientAdresse').innerText = facture.clientAdresse;
+            document.getElementById('facture-clientCodePostal').innerText = facture.clientCodePostal;
+            document.getElementById('facture-clientPays').innerText = facture.clientPays;
+            document.getElementById('facture-expediteur').innerText = facture.expediteur;
+            document.getElementById('facture-expediteurContact').innerText = facture.expediteurContact;
+            document.getElementById('facture-expediteurPiece').innerText = facture.expediteurPiece;
+            document.getElementById('facture-tracking').innerText = facture.trackingValue;
+            
+            document.getElementById('header-unit').innerText = facture.unitType;
+            document.getElementById('facture-description').innerText = facture.description;
+            document.getElementById('facture-unitValue').innerText = facture.unitValue;
+            document.getElementById('facture-montant').innerText = facture.montant.toLocaleString('fr-FR') + " FCFA";
+            
+            document.getElementById('facture-valeurColis').innerText = (facture.valeurColis || "0").toLocaleString('fr-FR');
+            document.getElementById('facture-prixDeclare').innerText = (facture.prixDeclare || "0").toLocaleString('fr-FR');
+            
+            const ligneReduction = document.getElementById('ligne-reduction');
+            if (facture.reduction > 0) {
+                document.getElementById('facture-reduction').innerText = facture.reduction.toLocaleString('fr-FR');
+                ligneReduction.style.display = 'table-row';
+            } else {
+                ligneReduction.style.display = 'none';
+            }
+            
+            document.getElementById('facture-grandTotal').innerText = facture.total;
+
+            document.getElementById('printBtn').disabled = false;
+            document.getElementById('emailBtn').disabled = false;
+            numeroFactureActuel = facture.numero;
+        }
+
         function genererFacture() {
             const maintenant = new Date();
             const dateStr = maintenant.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            const heureStr = maintenant.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
             numeroFactureActuel = 'FACT-' + maintenant.getTime(); 
 
             const clientNom = document.getElementById('clientNom').value;
             const clientContact = document.getElementById('clientContact').value;
-            const clientVille = document.getElementById('clientVille').value;
+            const clientAdresse = document.getElementById('clientAdresse').value;
+            const clientCodePostal = document.getElementById('clientCodePostal').value;
+            const clientPays = document.getElementById('clientPays').value;
             const expediteur = document.getElementById('expediteur').value;
             const expediteurContact = document.getElementById('expediteurContact').value;
             const expediteurPiece = document.getElementById('expediteurPiece').value;
@@ -735,51 +792,49 @@
             
             const grandTotal = montant - reduction;
 
-            document.getElementById('facture-date').innerText = dateStr;
-            document.getElementById('facture-num').innerText = numeroFactureActuel;
-            document.getElementById('facture-clientNom').innerText = clientNom || "-";
-            document.getElementById('facture-clientContact').innerText = clientContact || "-";
-            document.getElementById('facture-clientVille').innerText = clientVille || "-";
-            document.getElementById('facture-expediteur').innerText = expediteur || "-";
-            document.getElementById('facture-expediteurContact').innerText = expediteurContact || "-";
-            document.getElementById('facture-expediteurPiece').innerText = expediteurPiece || "-";
-            document.getElementById('facture-tracking').innerText = trackingValue;
-            
-            document.getElementById('header-unit').innerText = unitType;
-            document.getElementById('facture-description').innerText = description || "-";
-            document.getElementById('facture-unitValue').innerText = unitValue || "-";
-            document.getElementById('facture-montant').innerText = montant.toLocaleString('fr-FR') + " FCFA";
-            
-            document.getElementById('facture-valeurColis').innerText = (valeurColis || "0").toLocaleString('fr-FR');
-            document.getElementById('facture-prixDeclare').innerText = (prixDeclare || "0").toLocaleString('fr-FR');
-            
-            const ligneReduction = document.getElementById('ligne-reduction');
-            if (reduction > 0) {
-                document.getElementById('facture-reduction').innerText = reduction.toLocaleString('fr-FR');
-                ligneReduction.style.display = 'table-row';
-            } else {
-                ligneReduction.style.display = 'none';
-            }
-            
-            document.getElementById('facture-grandTotal').innerText = grandTotal.toLocaleString('fr-FR');
-
             const factureData = {
                 numero: numeroFactureActuel,
                 date: dateStr,
+                heure: heureStr,
+                timestamp: firebase.firestore.FieldValue.serverTimestamp(),
                 destinataire: clientNom || "-",
                 telephone: clientContact || "-",
+                clientAdresse: clientAdresse || "-",
+                clientCodePostal: clientCodePostal || "",
+                clientPays: clientPays || "-",
+                expediteur: expediteur || "-",
+                expediteurContact: expediteurContact || "-",
+                expediteurPiece: expediteurPiece || "-",
+                description: description || "-",
+                unitType: unitType,
+                unitValue: unitValue || "-",
+                montant: montant,
+                valeurColis: valeurColis || "0",
+                prixDeclare: prixDeclare || "0",
+                reduction: reduction,
+                trackingValue: trackingValue,
                 total: grandTotal.toLocaleString('fr-FR')
             };
 
-            const factures = JSON.parse(localStorage.getItem('facturesDB')) || [];
-            factures.push(factureData);
-            localStorage.setItem('facturesDB', JSON.stringify(factures));
-            
-            ajouterFactureAuTableau(factureData);
-
-            document.getElementById('printBtn').disabled = false;
-            document.getElementById('emailBtn').disabled = false;
+            facturesCollection.add(factureData).then((docRef) => {
+                factureData.id = docRef.id;
+                afficherApercu(factureData.id);
+            });
         }
+
+        function populateCountries() {
+            const countries = ["Afghanistan","Afrique du Sud","Albanie","Algérie","Allemagne","Andorre","Angola","Antigua-et-Barbuda","Arabie saoudite","Argentine","Arménie","Australie","Autriche","Azerbaïdjan","Bahamas","Bahreïn","Bangladesh","Barbade","Belgique","Belize","Bénin","Bhoutan","Biélorussie","Birmanie","Bolivie","Bosnie-Herzégovine","Botswana","Brésil","Brunei","Bulgarie","Burkina Faso","Burundi","Cambodge","Cameroun","Canada","Cap-Vert","Chili","Chine","Chypre","Colombie","Comores","Congo-Brazzaville","Congo-Kinshasa","Corée du Nord","Corée du Sud","Costa Rica","Côte d'Ivoire","Croatie","Cuba","Danemark","Djibouti","Dominique","Égypte","Émirats arabes unis","Équateur","Érythrée","Espagne","Estonie","Eswatini","État de Palestine","États-Unis","Éthiopie","Fidji","Finlande","France","Gabon","Gambie","Géorgie","Ghana","Grèce","Grenade","Guatemala","Guinée","Guinée équatoriale","Guinée-Bissau","Guyana","Haïti","Honduras","Hongrie","Îles Marshall","Îles Salomon","Inde","Indonésie","Irak","Iran","Irlande","Islande","Israël","Italie","Jamaïque","Japon","Jordanie","Kazakhstan","Kenya","Kirghizistan","Kiribati","Koweït","Laos","Lesotho","Lettonie","Liban","Liberia","Libye","Liechtenstein","Lituanie","Luxembourg","Macédoine du Nord","Madagascar","Malaisie","Malawi","Maldives","Mali","Malte","Maroc","Maurice","Mauritanie","Mexique","Micronésie","Moldavie","Monaco","Mongolie","Monténégro","Mozambique","Namibie","Nauru","Népal","Nicaragua","Niger","Nigeria","Norvège","Nouvelle-Zélande","Oman","Ouganda","Ouzbékistan","Pakistan","Palaos","Panama","Papouasie-Nouvelle-Guinée","Paraguay","Pays-Bas","Pérou","Philippines","Pologne","Portugal","Qatar","République centrafricaine","République dominicaine","République tchèque","Roumanie","Royaume-Uni","Russie","Rwanda","Saint-Christophe-et-Niévès","Saint-Marin","Saint-Vincent-et-les-Grenadines","Sainte-Lucie","Salvador","Samoa","Sao Tomé-et-Principe","Sénégal","Serbie","Seychelles","Sierra Leone","Singapour","Slovaquie","Slovénie","Somalie","Soudan","Soudan du Sud","Sri Lanka","Suède","Suisse","Suriname","Syrie","Tadjikistan","Tanzanie","Tchad","Thaïlande","Timor oriental","Togo","Tonga","Trinité-et-Tobago","Tunisie","Turkménistan","Turquie","Tuvalu","Ukraine","Uruguay","Vanuatu","Vatican","Venezuela","Viêt Nam","Yémen","Zambie","Zimbabwe"];
+            const select = document.getElementById('clientPays');
+            countries.forEach(country => {
+                const option = document.createElement('option');
+                option.value = country;
+                option.innerText = country;
+                select.appendChild(option);
+            });
+            select.value = "Côte d'Ivoire"; // Valeur par défaut
+        }
+        populateCountries();
+
     </script>
 </body>
 </html>
