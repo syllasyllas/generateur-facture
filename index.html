@@ -253,23 +253,18 @@
         .partie strong, .details-expedition strong, .details-contenu strong {
             color: var(--primary-color);
         }
-        .table-contenu, #dbTable {
+        .table-contenu {
             width: 100%;
             margin-top: 10px;
             border-collapse: collapse;
         }
-        .table-contenu th, .table-contenu td, #dbTable th, #dbTable td {
+        .table-contenu th, .table-contenu td {
             border: 1.5px solid #333;
             padding: 12px;
             text-align: left;
             font-size: 1em;
         }
-        #dbTable .invoice-link {
-            cursor: pointer;
-            color: var(--primary-color);
-            text-decoration: underline;
-        }
-        .table-contenu th, #dbTable th {
+        .table-contenu th {
             background-color: rgba(241, 245, 249, 0.8);
             font-weight: 600;
         }
@@ -329,14 +324,31 @@
             margin-top: 40px;
             font-style: italic;
         }
-        .status-select {
-            padding: 5px;
-            border-radius: 5px;
-            border: 1px solid #ccc;
+        
+        /* NOUVEAUX STYLES POUR LA BASE DE DONNÉES */
+        .db-entry {
+            border: 1.5px solid #ccc;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+            background-color: #f9f9f9;
         }
-        .status-payee { background-color: #d4edda; color: #155724; }
-        .status-en-attente { background-color: #fff3cd; color: #856404; }
-        .status-annulee { background-color: #f8d7da; color: #721c24; }
+        .db-entry p {
+            margin: 8px 0;
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            gap: 10px;
+        }
+        .db-entry strong {
+            font-weight: 600;
+            color: #555;
+        }
+        .invoice-link {
+            cursor: pointer;
+            color: var(--primary-color);
+            text-decoration: underline;
+            font-weight: bold;
+        }
 
         @media (max-width: 768px) {
             body { padding: 10px; }
@@ -346,7 +358,7 @@
             .partie, .zone-signature { width: 100%; }
             .resume-financier { padding-left: 0; }
             .signatures { gap: 50px; }
-            #dbTable th, #dbTable td { font-size: 12px; padding: 8px; }
+            .db-entry p { grid-template-columns: 140px 1fr; }
         }
 
         @media print {
@@ -529,20 +541,9 @@
 
         <div class="conteneur base-de-donnees">
             <h2>📊 Base de Données des Factures</h2>
-            <table id="dbTable">
-                <thead>
-                    <tr>
-                        <th>N° Facture</th>
-                        <th>Date</th>
-                        <th>Heure</th>
-                        <th>Destinataire</th>
-                        <th>Téléphone Dest.</th>
-                        <th>Contact Expéd.</th>
-                        <th>Grand Total</th>
-                    </tr>
-                </thead>
-                <tbody id="dbBody"></tbody>
-            </table>
+            <div id="dbList">
+                <!-- Les factures sauvegardées apparaîtront ici -->
+            </div>
             <button onclick="demanderPinPourSuppression()" class="bouton-danger" style="margin-top: 20px; width: 100%;">Vider la Base de Données</button>
         </div>
     </div>
@@ -599,6 +600,7 @@
                 document.getElementById('main-content').style.display = 'flex';
                 resetInactivityTimer();
                 setupInactivityListeners();
+                chargerBaseDeDonnees();
             } else {
                 errorMessage.style.display = 'block';
                 document.getElementById('pin-input').value = '';
@@ -658,8 +660,8 @@
 
         function chargerBaseDeDonnees() {
             facturesCollection.orderBy("timestamp", "desc").onSnapshot(snapshot => {
-                const dbBody = document.getElementById('dbBody');
-                dbBody.innerHTML = '';
+                const dbList = document.getElementById('dbList');
+                dbList.innerHTML = '';
                 facturesCache = [];
                 snapshot.forEach(doc => {
                     const facture = doc.data();
@@ -667,20 +669,26 @@
                     facturesCache.push(facture);
                     ajouterFactureAuTableau(facture);
                 });
+            }, error => {
+                console.error("Erreur de lecture de la base de données: ", error);
+                alert("Erreur de connexion à la base de données. Vérifiez votre configuration Firebase et vos règles de sécurité.");
             });
         }
 
         function ajouterFactureAuTableau(facture) {
-            const dbBody = document.getElementById('dbBody');
-            const newRow = dbBody.insertRow();
+            const dbList = document.getElementById('dbList');
+            const entryDiv = document.createElement('div');
+            entryDiv.className = 'db-entry';
 
-            newRow.insertCell(0).innerHTML = `<a href="#" class="invoice-link" onclick="afficherApercu('${facture.id}')">${facture.numero}</a>`;
-            newRow.insertCell(1).innerText = facture.date;
-            newRow.insertCell(2).innerText = facture.heure;
-            newRow.insertCell(3).innerText = facture.destinataire;
-            newRow.insertCell(4).innerText = facture.telephone;
-            newRow.insertCell(5).innerText = facture.expediteurContact;
-            newRow.insertCell(6).innerText = facture.total + " FCFA";
+            entryDiv.innerHTML = `
+                <p><strong>N° Facture:</strong> <a href="#" class="invoice-link" onclick="afficherApercuParId('${facture.id}')">${facture.numero}</a></p>
+                <p><strong>Date:</strong> <span>${facture.date} à ${facture.heure}</span></p>
+                <p><strong>Destinataire:</strong> <span>${facture.destinataire}</span></p>
+                <p><strong>Téléphone Dest.:</strong> <span>${facture.telephone}</span></p>
+                <p><strong>Contact Expéd.:</strong> <span>${facture.expediteurContact}</span></p>
+                <p><strong>Grand Total:</strong> <span>${facture.total} FCFA</span></p>
+            `;
+            dbList.appendChild(entryDiv);
         }
         
         function demanderPinPourSuppression() {
@@ -720,8 +728,14 @@
             window.location.href = mailtoLink;
         }
 
-        function afficherApercu(factureId) {
+        function afficherApercuParId(factureId) {
             const facture = facturesCache.find(f => f.id === factureId);
+            if (facture) {
+                afficherApercu(facture);
+            }
+        }
+
+        function afficherApercu(facture) {
             if (!facture) return;
 
             document.getElementById('facture-date').innerText = facture.date;
@@ -815,11 +829,19 @@
                 trackingValue: trackingValue,
                 total: grandTotal.toLocaleString('fr-FR')
             };
+            
+            // Affiche l'aperçu immédiatement
+            afficherApercu(factureData);
 
-            facturesCollection.add(factureData).then((docRef) => {
-                factureData.id = docRef.id;
-                afficherApercu(factureData.id);
-            });
+            // Sauvegarde en arrière-plan
+            facturesCollection.add(factureData)
+                .then((docRef) => {
+                    console.log("Facture sauvegardée avec l'ID: ", docRef.id);
+                })
+                .catch((error) => {
+                    console.error("Erreur lors de la sauvegarde de la facture: ", error);
+                    alert("ERREUR: La facture n'a pas pu être sauvegardée en ligne. Vérifiez la console pour les détails.");
+                });
         }
 
         function populateCountries() {
