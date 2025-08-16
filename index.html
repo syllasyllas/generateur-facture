@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Générateur de Facture</title>
+    <title>GENERATEUR FACTURE MONCOLIS.CI</title>
     <style>
         :root {
             --primary-color: #ff8c00; /* Orange MONCOLIS */
@@ -326,11 +326,37 @@
         }
         
         /* NOUVEAUX STYLES POUR LA BASE DE DONNÉES */
+        .week-group .week-header {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 12px 15px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .week-group .week-header::after {
+            content: '▼';
+            font-size: 0.8em;
+            transition: transform 0.3s;
+        }
+        .week-group .week-header.active::after {
+            transform: rotate(180deg);
+        }
+        .week-content {
+            padding: 0 10px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+        }
         .db-entry {
             border: 1.5px solid #ccc;
             border-radius: 8px;
             padding: 15px;
-            margin-bottom: 15px;
+            margin-top: 15px;
             background-color: #f9f9f9;
         }
         .db-entry p {
@@ -409,7 +435,7 @@
     <div id="main-content">
         <div class="conteneur formulaire">
             <form id="invoiceForm">
-                <h1>📝 Générateur de Facture</h1>
+                <h1>GENERATEUR FACTURE MONCOLIS.CI</h1>
                 
                 <div class="champ"><label for="clientNom">Nom & Prénom du Destinataire</label><input type="text" id="clientNom" placeholder="Ex: Jean Dupont"></div>
                 <div class="champ"><label for="clientContact">Contact du Destinataire</label><input type="text" id="clientContact" placeholder="Ex: 0102030405"></div>
@@ -557,12 +583,11 @@
             apiKey: "AIzaSyCP-HMUYTKPc8qJx0IP0Zy1AEE6YNiAv6I",
             authDomain: "facture-moncolis.firebaseapp.com",
             projectId: "facture-moncolis",
-            storageBucket: "facture-moncolis.appspot.com", // Ligne corrigée
+            storageBucket: "facture-moncolis.appspot.com",
             messagingSenderId: "423934430446",
             appId: "1:423934430446:web:789b35c6a3a66ed70df7ff"
         };
 
-        // Initialisation de Firebase
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const facturesCollection = db.collection("factures");
@@ -658,25 +683,87 @@
             toggleReductionInput();
         }
 
+        function getWeekKey(date) {
+            const startOfWeek = new Date(date.valueOf());
+            const day = startOfWeek.getDay();
+            const diff = startOfWeek.getDate() - day + (day === 0 ? -6 : 1); // Lundi est le début
+            startOfWeek.setDate(diff);
+
+            const endOfWeek = new Date(startOfWeek.valueOf());
+            endOfWeek.setDate(startOfWeek.getDate() + 6);
+
+            const optionsStart = { day: '2-digit', month: 'long' };
+            const optionsEnd = { day: '2-digit', month: 'long', year: 'numeric' };
+            
+            const startStr = startOfWeek.toLocaleDateString('fr-FR', optionsStart);
+            const endStr = endOfWeek.toLocaleDateString('fr-FR', optionsEnd);
+
+            return `Semaine du ${startStr} au ${endStr}`;
+        }
+
         function chargerBaseDeDonnees() {
             facturesCollection.orderBy("timestamp", "desc").onSnapshot(snapshot => {
                 const dbList = document.getElementById('dbList');
                 dbList.innerHTML = '';
                 facturesCache = [];
+                const groupedInvoices = {};
+
                 snapshot.forEach(doc => {
                     const facture = doc.data();
                     facture.id = doc.id;
                     facturesCache.push(facture);
-                    ajouterFactureAuTableau(facture);
+                    
+                    const date = facture.timestamp ? facture.timestamp.toDate() : new Date();
+                    const weekKey = getWeekKey(date);
+                    if (!groupedInvoices[weekKey]) {
+                        groupedInvoices[weekKey] = [];
+                    }
+                    groupedInvoices[weekKey].push(facture);
                 });
+
+                const currentWeekKey = getWeekKey(new Date());
+
+                for (const weekKey in groupedInvoices) {
+                    const weekGroup = document.createElement('div');
+                    weekGroup.className = 'week-group';
+
+                    const weekHeader = document.createElement('div');
+                    weekHeader.className = 'week-header';
+                    weekHeader.innerText = weekKey;
+                    
+                    const weekContent = document.createElement('div');
+                    weekContent.className = 'week-content';
+
+                    groupedInvoices[weekKey].forEach(facture => {
+                        ajouterFactureAuTableau(facture, weekContent);
+                    });
+
+                    weekHeader.addEventListener('click', () => {
+                        weekHeader.classList.toggle('active');
+                        if (weekContent.style.maxHeight) {
+                            weekContent.style.maxHeight = null;
+                        } else {
+                            weekContent.style.maxHeight = weekContent.scrollHeight + "px";
+                        }
+                    });
+
+                    weekGroup.appendChild(weekHeader);
+                    weekGroup.appendChild(weekContent);
+                    dbList.appendChild(weekGroup);
+
+                    if (weekKey === currentWeekKey) {
+                        weekHeader.classList.add('active');
+                        weekContent.style.maxHeight = weekContent.scrollHeight + "px";
+                    }
+                }
+
             }, error => {
                 console.error("Erreur de lecture de la base de données: ", error);
                 alert("Erreur de connexion à la base de données. Vérifiez votre configuration Firebase et vos règles de sécurité.");
             });
         }
 
-        function ajouterFactureAuTableau(facture) {
-            const dbList = document.getElementById('dbList');
+        function ajouterFactureAuTableau(facture, container) {
             const entryDiv = document.createElement('div');
             entryDiv.className = 'db-entry';
 
@@ -687,8 +774,9 @@
                 <p><strong>Téléphone Dest.:</strong> <span>${facture.telephone}</span></p>
                 <p><strong>Contact Expéd.:</strong> <span>${facture.expediteurContact}</span></p>
                 <p><strong>Grand Total:</strong> <span>${facture.total} FCFA</span></p>
+                <button onclick="dupliquerFacture('${facture.id}')" class="bouton-secondaire" style="width:auto; padding: 8px 12px; font-size: 14px; margin-top: 10px;">Dupliquer</button>
             `;
-            dbList.appendChild(entryDiv);
+            container.appendChild(entryDiv);
         }
         
         function demanderPinPourSuppression() {
@@ -733,6 +821,49 @@
             if (facture) {
                 afficherApercu(facture);
             }
+        }
+
+        function dupliquerFacture(factureId) {
+            const facture = facturesCache.find(f => f.id === factureId);
+            if (!facture) return;
+
+            // Remplir le formulaire
+            document.getElementById('clientNom').value = facture.destinataire;
+            document.getElementById('clientContact').value = facture.telephone;
+            document.getElementById('clientAdresse').value = facture.clientAdresse;
+            document.getElementById('clientCodePostal').value = facture.clientCodePostal;
+            document.getElementById('clientPays').value = facture.clientPays;
+            document.getElementById('expediteur').value = facture.expediteur;
+            document.getElementById('expediteurContact').value = facture.expediteurContact;
+            document.getElementById('expediteurPiece').value = facture.expediteurPiece;
+            document.getElementById('description').value = facture.description;
+            document.getElementById('unitType').value = facture.unitType;
+            document.getElementById('unitValue').value = facture.unitValue;
+            document.getElementById('montant').value = facture.montant;
+            document.getElementById('valeurColis').value = facture.valeurColis;
+            document.getElementById('prixDeclare').value = facture.prixDeclare;
+
+            // Gérer les cases à cocher
+            const hasTrackingCheckbox = document.getElementById('hasTracking');
+            if (facture.trackingValue !== "Non applicable") {
+                hasTrackingCheckbox.checked = true;
+                document.getElementById('tracking').value = facture.trackingValue;
+            } else {
+                hasTrackingCheckbox.checked = false;
+            }
+            toggleTrackingInput();
+
+            const hasReductionCheckbox = document.getElementById('hasReduction');
+            if (facture.reduction > 0) {
+                hasReductionCheckbox.checked = true;
+                document.getElementById('reduction').value = facture.reduction;
+            } else {
+                hasReductionCheckbox.checked = false;
+            }
+            toggleReductionInput();
+
+            // Remonter en haut de la page
+            window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
         function afficherApercu(facture) {
@@ -830,10 +961,8 @@
                 total: grandTotal.toLocaleString('fr-FR')
             };
             
-            // Affiche l'aperçu immédiatement
             afficherApercu(factureData);
 
-            // Sauvegarde en arrière-plan
             facturesCollection.add(factureData)
                 .then((docRef) => {
                     console.log("Facture sauvegardée avec l'ID: ", docRef.id);
