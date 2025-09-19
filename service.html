@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Site Démo</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0; padding: 0;
+    }
+    nav {
+      background: #222;
+      padding: 10px;
+    }
+    nav a {
+      color: white;
+      margin: 0 15px;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    nav a:hover {
+      text-decoration: underline;
+    }
+    .page {
+      display: none;
+      padding: 20px;
+    }
+    .active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Menu -->
+  <nav>
+    <a onclick="showPage('accueil')">Accueil</a>
+    <a onclick="showPage('services')">Services</a>
+    <a onclick="showPage('contact')">Contact</a>
+  </nav>
+
+  <!-- Contenu des pages -->
+  <div id="accueil" class="page active">
+    <h1>Bienvenue sur la page d’accueil</h1>
+    <p>Ceci est la section Accueil.</p>
+  </div>
+
+  <div id="services" class="page">
+    <h1>Nos Services</h1>
+    <p>Ici on présente les services proposés.</p>
+  </div>
+
+  <div id="contact" class="page">
+    <h1>Contact</h1>
+    <p>Écris-nous à <b>contact@monsite.com</b></p>
+  </div>
+
+  <!-- Script JS -->
+  <script>
+    function showPage(pageId) {
+      // cacher toutes les pages
+      const pages = document.querySelectorAll('.page');
+      pages.forEach(p => p.classList.remove('active'));
+
+      // afficher seulement la page choisie
+      document.getElementById(pageId).classList.add('active');
+    }
+  </script>
+
+</body>
+</html>
